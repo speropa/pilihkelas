@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilihan Kelas Ujian</title>
+    <!-- Memuat Tailwind CSS dari CDN untuk styling yang responsif dan modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Mengatur font Inter sebagai font utama */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Warna latar belakang abu-abu muda */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Memastikan halaman mengisi tinggi viewport */
+            padding: 1rem; /* Padding untuk tampilan di perangkat kecil */
+            box-sizing: border-box; /* Memastikan padding tidak menambah ukuran elemen */
+        }
+
+        /* Styling khusus untuk tombol agar menyerupai gambar yang diberikan */
+        .button-style {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 2rem; /* Padding tombol */
+            border-radius: 9999px; /* Sudut sangat membulat */
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Bayangan teks */
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Bayangan tombol */
+            cursor: pointer;
+            border: none; /* Menghilangkan border default */
+            outline: none; /* Menghilangkan outline saat fokus */
+            text-decoration: none; /* Menghilangkan garis bawah pada link */
+        }
+
+        .button-style:hover {
+            transform: translateY(-2px); /* Efek sedikit terangkat saat hover */
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1); /* Bayangan lebih gelap saat hover */
+        }
+
+        .button-style:active {
+            transform: translateY(0); /* Kembali ke posisi semula saat diklik */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06); /* Bayangan lebih kecil saat aktif */
+        }
+
+        /* Warna spesifik untuk setiap tombol */
+        .button-blue {
+            background: linear-gradient(145deg, #60A5FA, #3B82F6); /* Gradient biru baru */
+            border-bottom: 4px solid #2563EB; /* Border bawah biru baru */
+        }
+
+        .button-orange {
+            background: linear-gradient(145deg, #FDBA74, #FF8C00); /* Gradient oranye baru */
+            border-bottom: 4px solid #CC7000; /* Border bawah oranye baru */
+        }
+
+        .button-maroon {
+            background: linear-gradient(145deg, #A52A2A, #800000); /* Gradient marun baru */
+            border-bottom: 4px solid #600000; /* Border bawah marun baru */
+        }
+
+        /* Modal konfirmasi */
+        .modal {
+            display: none; /* Sembunyikan modal secara default */
+            position: fixed;
+            z-index: 1000; /* Pastikan modal di atas konten lain */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6); /* Latar belakang gelap transparan */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90%; /* Lebar maksimum modal */
+            width: 400px; /* Lebar default modal */
+            animation: fadeIn 0.3s ease-out; /* Animasi muncul */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1.5rem;
+            gap: 1rem; /* Jarak antar tombol */
+        }
+
+        .modal-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .modal-button.confirm {
+            background-color: #3b82f6; /* Warna biru untuk konfirmasi */
+            color: white;
+        }
+
+        .modal-button.confirm:hover {
+            background-color: #2563eb;
+        }
+
+        .modal-button.cancel {
+            background-color: #ef4444; /* Warna merah untuk batal */
+            color: white;
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #dc2626;
+        }
+
+        /* Responsif untuk tablet dan desktop */
+        @media (min-width: 768px) {
+            .container {
+                padding: 3rem; /* Padding lebih besar untuk layar lebih lebar */
+            }
+            .button-style {
+                padding: 1rem 3rem; /* Ukuran tombol lebih besar */
+                font-size: 1.125rem; /* Ukuran font lebih besar */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Kontainer utama -->
+    <div class="container bg-white rounded-xl shadow-2xl p-6 md:p-10 text-center max-w-md w-full">
+        <!-- Judul -->
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4 tracking-wide">SELAMAT DATANG</h1>
+        <!-- Teks sambutan -->
+        <p class="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
+            <br> Silakan pilih jenjang kelas Anda untuk melanjutkan ke halaman ujian.
+        </p>
+
+        <!-- Area tombol pilihan kelas -->
+        <div class="space-y-6">
+            <!-- Tombol KELAS 7 -->
+            <button id="btnKelas7" class="button-style button-blue w-full">
+                KELAS 7
+            </button>
+            <!-- Tombol KELAS 8 -->
+            <button id="btnKelas8" class="button-style button-orange w-full">
+                KELAS 8
+            </button>
+            <!-- Tombol KELAS 9 -->
+            <button id="btnKelas9" class="button-style button-maroon w-full">
+                KELAS 9
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Konfirmasi Pilihan</h2>
+            <p class="text-gray-700 text-lg mb-6">Apakah Anda yakin ingin memilih <span id="selectedClass" class="font-bold text-blue-600"></span>?</p>
+            <div class="modal-buttons">
+                <button id="confirmBtn" class="modal-button confirm">Ya, Lanjutkan</button>
+                <button id="cancelBtn" class="modal-button cancel">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mendapatkan referensi elemen-elemen DOM
+        const btnKelas7 = document.getElementById('btnKelas7');
+        const btnKelas8 = document.getElementById('btnKelas8');
+        const btnKelas9 = document.getElementById('btnKelas9');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const selectedClassSpan = document.getElementById('selectedClass');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        let targetUrl = ''; // Variabel untuk menyimpan URL tujuan
+
+        // Fungsi untuk menampilkan modal konfirmasi
+        function showConfirmationModal(className, url) {
+            selectedClassSpan.textContent = className; // Menampilkan nama kelas yang dipilih
+            targetUrl = url; // Menyimpan URL tujuan
+            confirmationModal.style.display = 'flex'; // Menampilkan modal
+        }
+
+        // Event listener untuk tombol KELAS 7
+        btnKelas7.addEventListener('click', () => {
+            showConfirmationModal('KELAS 7', 'https://dam2.cbtdigimandiri.id');
+        });
+
+        // Event listener untuk tombol KELAS 8
+        btnKelas8.addEventListener('click', () => {
+            showConfirmationModal('KELAS 8', 'https://exam2.cbtdigimandiri.id');
+        });
+
+        // Event listener untuk tombol KELAS 9
+        btnKelas9.addEventListener('click', () => {
+            showConfirmationModal('KELAS 9', 'https://smp2pajangan.github.io/customlink');
+        });
+
+        // Event listener untuk tombol "Ya, Lanjutkan" di modal
+        confirmBtn.addEventListener('click', () => {
+            window.location.href = targetUrl; // Mengarahkan ke URL tujuan
+        });
+
+        // Event listener untuk tombol "Batal" di modal
+        cancelBtn.addEventListener('click', () => {
+            confirmationModal.style.display = 'none'; // Menyembunyikan modal
+        });
+
+        // Menyembunyikan modal jika area di luar modal diklik
+        confirmationModal.addEventListener('click', (event) => {
+            if (event.target === confirmationModal) {
+                confirmationModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
