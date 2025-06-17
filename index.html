@@ -67,10 +67,9 @@
             border-bottom: 4px solid #600000;
         }
 
-        /* Kelas baru untuk tombol hijau */
         .button-green {
-            background: linear-gradient(145deg, #4ADE80, #22C55E); /* Green gradient */
-            border-bottom: 4px solid #16A34A; /* Darker green for the bottom border */
+            background: linear-gradient(145deg, #4ADE80, #22C55E);
+            border-bottom: 4px solid #16A34A;
         }
 
         .modal {
@@ -189,7 +188,6 @@
                 KELAS 9
             </button>
 
-            <!-- Tombol SUSULAN sekarang menggunakan kelas button-green -->
             <button id="btnSusulan" class="button-style button-green w-full">
                 SUSULAN
             </button>
@@ -236,10 +234,10 @@
         let targetUrl = '';
 
         function applyButtonStates() {
-            btnKelas7.disabled = !isKelas7Enabled;
-            btnKelas8.disabled = !isKelas8Enabled;
-            btnKelas9.disabled = !isKelas9Enabled;
-            btnSusulan.disabled = !isSusulanEnabled;
+            btnKelas7.classList.toggle('hidden', !isKelas7Enabled);
+            btnKelas8.classList.toggle('hidden', !isKelas8Enabled);
+            btnKelas9.classList.toggle('hidden', !isKelas9Enabled);
+            btnSusulan.classList.toggle('hidden', !isSusulanEnabled);
         }
 
         function showConfirmationModal(className, url) {
@@ -250,13 +248,11 @@
 
         function showSusulanModal() {
             susulanList.innerHTML = '';
-
             susulanExams.forEach(exam => {
                 const listItem = document.createElement('li');
                 listItem.classList.add('modal-list-item', 'transition', 'duration-200');
                 listItem.textContent = exam.name;
                 listItem.dataset.url = exam.url;
-                
                 listItem.addEventListener('click', (event) => {
                     window.location.href = event.target.dataset.url;
                 });
@@ -313,16 +309,11 @@
             }
         });
 
-        // --- PENGATURAN STATUS ON/OFF TOMBOL DAN URL (DAPAT DIUBAH DI SINI) ---
-
-        // Atur 'true' untuk mengaktifkan tombol, 'false' untuk menonaktifkan
         const isKelas7Enabled = false;
         const isKelas8Enabled = false;
         const isKelas9Enabled = false;
         const isSusulanEnabled = true;
 
-        // Data ujian susulan (Anda bisa mengubah ini sesuai kebutuhan Anda)
-        // Setiap objek memiliki 'name' (nama ujian) dan 'url' (link tujuan)
         const susulanExams = [
             { name: 'Informatika Kelas 7', url: 'https://forms.gle/RuSQcVZVdG4E7Mwv8' },
             { name: 'Seni Budaya Kelas 7', url: 'https://docs.google.com/forms/d/e/1FAIpQLSeYEBxeSYw7-LFUHuSZQYy7Z69kDJ4eWUWborDhMPXNO8IeEg/viewform?usp=preview' },
@@ -330,10 +321,7 @@
             { name: 'Seni Budaya Kelas 8', url: 'https://forms.gle/bWrwyFjFGPbkqxB77' },
         ];
 
-        // Terapkan status tombol setelah semua variabel diatur
         applyButtonStates();
-
-        // -------------------------------------------------------------------
     </script>
 </body>
 </html>
