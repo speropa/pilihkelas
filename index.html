@@ -156,6 +156,41 @@
             background-color: #e2e8f0;
         }
 
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            visibility: hidden; /* Dimulai tersembunyi */
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s linear;
+        }
+
+        .loading-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (min-width: 768px) {
             .container {
                 padding: 3rem;
@@ -169,6 +204,10 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
+    <div id="loadingOverlay" class="loading-overlay visible">
+        <div class="spinner"></div>
+    </div>
+
     <div class="container bg-white rounded-xl shadow-2xl p-6 md:p-10 text-center max-w-md w-full">
         <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4 tracking-wide">SELAMAT DATANG</h1>
         <p class="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
@@ -176,19 +215,19 @@
         </p>
 
         <div class="space-y-6">
-            <button id="btnKelas7" class="button-style button-blue w-full">
+            <button id="btnKelas7" class="button-style button-blue w-full hidden">
                 KELAS 7
             </button>
 
-            <button id="btnKelas8" class="button-style button-orange w-full">
+            <button id="btnKelas8" class="button-style button-orange w-full hidden">
                 KELAS 8
             </button>
 
-            <button id="btnKelas9" class="button-style button-maroon w-full">
+            <button id="btnKelas9" class="button-style button-maroon w-full hidden">
                 KELAS 9
             </button>
 
-            <button id="btnSusulan" class="button-style button-green w-full">
+            <button id="btnSusulan" class="button-style button-green w-full hidden">
                 SUSULAN
             </button>
         </div>
@@ -216,7 +255,26 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOBCX8x60pYqxtXmXMz2xc5dwC3HJH5EE",
+            authDomain: "ujian-online-berbasis-android.firebaseapp.com",
+            databaseURL: "https://ujian-online-berbasis-android-default-rtdb.firebaseio.com",
+            projectId: "ujian-online-berbasis-android",
+            storageBucket: "ujian-online-berbasis-android.firebasestorage.app",
+            messagingSenderId: "923446282537",
+            appId: "1:923446282537:web:60d374dde8aca61f6a0f38"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const dbRef = ref(database);
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
         const btnKelas7 = document.getElementById('btnKelas7');
         const btnKelas8 = document.getElementById('btnKelas8');
         const btnKelas9 = document.getElementById('btnKelas9');
@@ -232,12 +290,14 @@
         const closeSusulanModalBtn = document.getElementById('closeSusulanModalBtn');
 
         let targetUrl = '';
+        let currentSusulanExams = [];
+        let firebaseSettings = {};
 
         function applyButtonStates() {
-            btnKelas7.classList.toggle('hidden', !isKelas7Enabled);
-            btnKelas8.classList.toggle('hidden', !isKelas8Enabled);
-            btnKelas9.classList.toggle('hidden', !isKelas9Enabled);
-            btnSusulan.classList.toggle('hidden', !isSusulanEnabled);
+            btnKelas7.classList.toggle('hidden', !firebaseSettings?.kelas7?.enabled);
+            btnKelas8.classList.toggle('hidden', !firebaseSettings?.kelas8?.enabled);
+            btnKelas9.classList.toggle('hidden', !firebaseSettings?.kelas9?.enabled);
+            btnSusulan.classList.toggle('hidden', !firebaseSettings?.susulan?.enabled);
         }
 
         function showConfirmationModal(className, url) {
@@ -248,39 +308,47 @@
 
         function showSusulanModal() {
             susulanList.innerHTML = '';
-            susulanExams.forEach(exam => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('modal-list-item', 'transition', 'duration-200');
-                listItem.textContent = exam.name;
-                listItem.dataset.url = exam.url;
-                listItem.addEventListener('click', (event) => {
-                    window.location.href = event.target.dataset.url;
+            if (currentSusulanExams && currentSusulanExams.length > 0) {
+                currentSusulanExams.forEach(exam => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('modal-list-item', 'transition', 'duration-200');
+                    listItem.textContent = exam.name;
+                    listItem.dataset.url = exam.url;
+                    
+                    listItem.addEventListener('click', (event) => {
+                        window.location.href = event.target.dataset.url;
+                    });
+                    susulanList.appendChild(listItem);
                 });
-                susulanList.appendChild(listItem);
-            });
+            } else {
+                const noExamsItem = document.createElement('li');
+                noExamsItem.textContent = "Belum ada ujian susulan yang tersedia.";
+                noExamsItem.classList.add('modal-list-item');
+                susulanList.appendChild(noExamsItem);
+            }
             susulanModal.style.display = 'flex';
         }
 
         btnKelas7.addEventListener('click', () => {
-            if (isKelas7Enabled) {
-                showConfirmationModal('KELAS 7', 'https://forms.gle/9XrPeVhr1zdnaqHu7');
+            if (!btnKelas7.classList.contains('hidden') && firebaseSettings?.kelas7?.url) {
+                showConfirmationModal('KELAS 7', firebaseSettings.kelas7.url);
             }
         });
 
         btnKelas8.addEventListener('click', () => {
-            if (isKelas8Enabled) {
-                showConfirmationModal('KELAS 8', 'https://forms.gle/bWrwyFjFGPbkqxB77');
+            if (!btnKelas8.classList.contains('hidden') && firebaseSettings?.kelas8?.url) {
+                showConfirmationModal('KELAS 8', firebaseSettings.kelas8.url);
             }
         });
 
         btnKelas9.addEventListener('click', () => {
-            if (isKelas9Enabled) {
-                showConfirmationModal('KELAS 9', 'https://smp2pajangan.github.io/customlink');
+            if (!btnKelas9.classList.contains('hidden') && firebaseSettings?.kelas9?.url) {
+                showConfirmationModal('KELAS 9', firebaseSettings.kelas9.url);
             }
         });
 
         btnSusulan.addEventListener('click', () => {
-            if (isSusulanEnabled) {
+            if (!btnSusulan.classList.contains('hidden')) {
                 showSusulanModal();
             }
         });
@@ -309,19 +377,27 @@
             }
         });
 
-        const isKelas7Enabled = false;
-        const isKelas8Enabled = false;
-        const isKelas9Enabled = false;
-        const isSusulanEnabled = true;
-
-        const susulanExams = [
-            { name: 'Informatika Kelas 7', url: 'https://forms.gle/RuSQcVZVdG4E7Mwv8' },
-            { name: 'Seni Budaya Kelas 7', url: 'https://docs.google.com/forms/d/e/1FAIpQLSeYEBxeSYw7-LFUHuSZQYy7Z69kDJ4eWUWborDhMPXNO8IeEg/viewform?usp=preview' },
-            { name: 'Informatika kelas 8', url: 'https://forms.gle/7HrjToFo3MayasN19' },
-            { name: 'Seni Budaya Kelas 8', url: 'https://forms.gle/bWrwyFjFGPbkqxB77' },
-        ];
-
-        applyButtonStates();
+        // Ambil data dari Firebase Realtime Database satu kali saat halaman dimuat
+        get(child(dbRef, 'publicSettings')).then((snapshot) => {
+            loadingOverlay.classList.remove('visible'); // Sembunyikan loading setelah data dimuat
+            if (snapshot.exists()) {
+                firebaseSettings = snapshot.val();
+                applyButtonStates();
+                
+                currentSusulanExams = [];
+                if (firebaseSettings.susulan && firebaseSettings.susulan.list) {
+                    Object.values(firebaseSettings.susulan.list).forEach(exam => {
+                        currentSusulanExams.push(exam);
+                    });
+                }
+            } else {
+                console.log("No data available in publicSettings.");
+                applyButtonStates({});
+            }
+        }).catch((error) => {
+            console.error("Error fetching data:", error);
+            loadingOverlay.classList.remove('visible'); // Sembunyikan loading meskipun ada error
+        });
     </script>
 </body>
 </html>
