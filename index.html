@@ -259,7 +259,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
-        // Konfigurasi Firebase Anda
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAOBCX8x60pYqxtXmXMz2xc5dwC3HJH5EE",
             authDomain: "ujian-online-berbasis-android.firebaseapp.com",
@@ -293,6 +293,7 @@
         let currentSusulanExams = [];
         let firebaseSettings = {};
 
+        // Function to apply button visibility based on Firebase settings
         function applyButtonStates() {
             btnKelas7.classList.toggle('hidden', !firebaseSettings?.kelas7?.enabled);
             btnKelas8.classList.toggle('hidden', !firebaseSettings?.kelas8?.enabled);
@@ -300,23 +301,25 @@
             btnSusulan.classList.toggle('hidden', !firebaseSettings?.susulan?.enabled);
         }
 
+        // Function to show the confirmation modal
         function showConfirmationModal(className, url) {
             selectedClassSpan.textContent = className;
             targetUrl = url;
             confirmationModal.style.display = 'flex';
         }
 
+        // Function to show the susulan (make-up) exam modal
         function showSusulanModal() {
-            susulanList.innerHTML = '';
+            susulanList.innerHTML = ''; // Clear previous list items
             if (currentSusulanExams && currentSusulanExams.length > 0) {
                 currentSusulanExams.forEach(exam => {
                     const listItem = document.createElement('li');
                     listItem.classList.add('modal-list-item', 'transition', 'duration-200');
                     listItem.textContent = exam.name;
-                    listItem.dataset.url = exam.url;
+                    listItem.dataset.url = exam.url; // Store the URL in a data attribute
                     
                     listItem.addEventListener('click', (event) => {
-                        window.location.href = event.target.dataset.url;
+                        window.location.href = event.target.dataset.url; // Redirect on click
                     });
                     susulanList.appendChild(listItem);
                 });
@@ -329,74 +332,99 @@
             susulanModal.style.display = 'flex';
         }
 
+        // Event listener for Kelas 7 button
         btnKelas7.addEventListener('click', () => {
             if (!btnKelas7.classList.contains('hidden') && firebaseSettings?.kelas7?.url) {
                 showConfirmationModal('KELAS 7', firebaseSettings.kelas7.url);
             }
         });
 
+        // Event listener for Kelas 8 button
         btnKelas8.addEventListener('click', () => {
             if (!btnKelas8.classList.contains('hidden') && firebaseSettings?.kelas8?.url) {
                 showConfirmationModal('KELAS 8', firebaseSettings.kelas8.url);
             }
         });
 
+        // Event listener for Kelas 9 button
         btnKelas9.addEventListener('click', () => {
             if (!btnKelas9.classList.contains('hidden') && firebaseSettings?.kelas9?.url) {
                 showConfirmationModal('KELAS 9', firebaseSettings.kelas9.url);
             }
         });
 
+        // Event listener for Susulan button
         btnSusulan.addEventListener('click', () => {
             if (!btnSusulan.classList.contains('hidden')) {
                 showSusulanModal();
             }
         });
 
+        // Event listener for confirmation button in the modal
         confirmBtn.addEventListener('click', () => {
             window.location.href = targetUrl;
         });
 
+        // Event listener for cancel button in the modal
         cancelBtn.addEventListener('click', () => {
             confirmationModal.style.display = 'none';
         });
 
+        // Event listener for close button in the susulan modal
         closeSusulanModalBtn.addEventListener('click', () => {
             susulanModal.style.display = 'none';
         });
 
+        // Close confirmation modal when clicking outside of it
         confirmationModal.addEventListener('click', (event) => {
             if (event.target === confirmationModal) {
                 confirmationModal.style.display = 'none';
             }
         });
 
+        // Close susulan modal when clicking outside of it
         susulanModal.addEventListener('click', (event) => {
             if (event.target === susulanModal) {
                 susulanModal.style.display = 'none';
             }
         });
 
-        // Ambil data dari Firebase Realtime Database satu kali saat halaman dimuat
+        // Fetch data from Firebase Realtime Database once when the page loads
         get(child(dbRef, 'publicSettings')).then((snapshot) => {
-            loadingOverlay.classList.remove('visible'); // Sembunyikan loading setelah data dimuat
+            loadingOverlay.classList.remove('visible'); // Hide loading overlay after data is loaded
             if (snapshot.exists()) {
                 firebaseSettings = snapshot.val();
                 applyButtonStates();
                 
                 currentSusulanExams = [];
                 if (firebaseSettings.susulan && firebaseSettings.susulan.list) {
+                    // Convert the object of susulan exams into an array
                     Object.values(firebaseSettings.susulan.list).forEach(exam => {
                         currentSusulanExams.push(exam);
                     });
                 }
+
+                // Check if all buttons are disabled, then redirect
+                const isKelas7Enabled = firebaseSettings?.kelas7?.enabled;
+                const isKelas8Enabled = firebaseSettings?.kelas8?.enabled;
+                const isKelas9Enabled = firebaseSettings?.kelas9?.enabled;
+                const isSusulanEnabled = firebaseSettings?.susulan?.enabled;
+
+                if (!isKelas7Enabled && !isKelas8Enabled && !isKelas9Enabled && !isSusulanEnabled) {
+                    window.location.href = "https://speropa.github.io/ujian";
+                }
+
             } else {
                 console.log("No data available in publicSettings.");
-                applyButtonStates({});
+                applyButtonStates({}); // Apply states even if no data (all hidden)
+                // If no publicSettings data is available, assume all are disabled and redirect
+                window.location.href = "https://speropa.github.io/ujian";
             }
         }).catch((error) => {
             console.error("Error fetching data:", error);
-            loadingOverlay.classList.remove('visible'); // Sembunyikan loading meskipun ada error
+            loadingOverlay.classList.remove('visible'); // Hide loading even if there's an error
+            // If there's an error fetching data, assume all are disabled and redirect
+            window.location.href = "https://speropa.github.io/ujian";
         });
     </script>
 </body>
