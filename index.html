@@ -167,14 +167,15 @@
             justify-content: center;
             align-items: center;
             z-index: 2000;
-            visibility: hidden; /* Dimulai tersembunyi */
-            opacity: 0;
+            /* Dimulai visible, akan disembunyikan oleh JS setelah data diambil */
+            visibility: visible;
+            opacity: 1;
             transition: visibility 0s, opacity 0.3s linear;
         }
 
-        .loading-overlay.visible {
-            visibility: visible;
-            opacity: 1;
+        .loading-overlay.hidden {
+            visibility: hidden;
+            opacity: 0;
         }
 
         .spinner {
@@ -204,11 +205,13 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <div id="loadingOverlay" class="loading-overlay visible">
+    <!-- Loading Overlay - visible by default -->
+    <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
     </div>
 
-    <div class="container bg-white rounded-xl shadow-2xl p-6 md:p-10 text-center max-w-md w-full">
+    <!-- Main Container - hidden by default, shown by JS if buttons are active -->
+    <div id="mainContainer" class="container bg-white rounded-xl shadow-2xl p-6 md:p-10 text-center max-w-md w-full hidden">
         <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4 tracking-wide">SELAMAT DATANG</h1>
         <p class="text-gray-600 text-lg md:text-xl mb-8 leading-relaxed">
             <br> Silakan pilih jenjang kelas Anda untuk melanjutkan ke halaman ujian.
@@ -259,7 +262,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
-        // Firebase configuration
+        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyAOBCX8x60pYqxtXmXMz2xc5dwC3HJH5EE",
             authDomain: "ujian-online-berbasis-android.firebaseapp.com",
@@ -275,6 +278,7 @@
         const dbRef = ref(database);
 
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const mainContainer = document.getElementById('mainContainer'); // Get the main container
         const btnKelas7 = document.getElementById('btnKelas7');
         const btnKelas8 = document.getElementById('btnKelas8');
         const btnKelas9 = document.getElementById('btnKelas9');
@@ -293,7 +297,7 @@
         let currentSusulanExams = [];
         let firebaseSettings = {};
 
-        // Function to apply button visibility based on Firebase settings
+        // Fungsi untuk menerapkan visibilitas tombol berdasarkan pengaturan Firebase
         function applyButtonStates() {
             btnKelas7.classList.toggle('hidden', !firebaseSettings?.kelas7?.enabled);
             btnKelas8.classList.toggle('hidden', !firebaseSettings?.kelas8?.enabled);
@@ -301,25 +305,25 @@
             btnSusulan.classList.toggle('hidden', !firebaseSettings?.susulan?.enabled);
         }
 
-        // Function to show the confirmation modal
+        // Fungsi untuk menampilkan modal konfirmasi
         function showConfirmationModal(className, url) {
             selectedClassSpan.textContent = className;
             targetUrl = url;
             confirmationModal.style.display = 'flex';
         }
 
-        // Function to show the susulan (make-up) exam modal
+        // Fungsi untuk menampilkan modal ujian susulan
         function showSusulanModal() {
-            susulanList.innerHTML = ''; // Clear previous list items
+            susulanList.innerHTML = ''; // Hapus item daftar sebelumnya
             if (currentSusulanExams && currentSusulanExams.length > 0) {
                 currentSusulanExams.forEach(exam => {
                     const listItem = document.createElement('li');
                     listItem.classList.add('modal-list-item', 'transition', 'duration-200');
                     listItem.textContent = exam.name;
-                    listItem.dataset.url = exam.url; // Store the URL in a data attribute
+                    listItem.dataset.url = exam.url; // Simpan URL dalam atribut data
                     
                     listItem.addEventListener('click', (event) => {
-                        window.location.href = event.target.dataset.url; // Redirect on click
+                        window.location.href = event.target.dataset.url; // Redirect saat diklik
                     });
                     susulanList.appendChild(listItem);
                 });
@@ -332,98 +336,104 @@
             susulanModal.style.display = 'flex';
         }
 
-        // Event listener for Kelas 7 button
+        // Event listener untuk tombol Kelas 7
         btnKelas7.addEventListener('click', () => {
             if (!btnKelas7.classList.contains('hidden') && firebaseSettings?.kelas7?.url) {
                 showConfirmationModal('KELAS 7', firebaseSettings.kelas7.url);
             }
         });
 
-        // Event listener for Kelas 8 button
+        // Event listener untuk tombol Kelas 8
         btnKelas8.addEventListener('click', () => {
             if (!btnKelas8.classList.contains('hidden') && firebaseSettings?.kelas8?.url) {
                 showConfirmationModal('KELAS 8', firebaseSettings.kelas8.url);
             }
         });
 
-        // Event listener for Kelas 9 button
+        // Event listener untuk tombol Kelas 9
         btnKelas9.addEventListener('click', () => {
             if (!btnKelas9.classList.contains('hidden') && firebaseSettings?.kelas9?.url) {
                 showConfirmationModal('KELAS 9', firebaseSettings.kelas9.url);
             }
         });
 
-        // Event listener for Susulan button
+        // Event listener untuk tombol Susulan
         btnSusulan.addEventListener('click', () => {
             if (!btnSusulan.classList.contains('hidden')) {
                 showSusulanModal();
             }
         });
 
-        // Event listener for confirmation button in the modal
+        // Event listener untuk tombol konfirmasi di modal
         confirmBtn.addEventListener('click', () => {
             window.location.href = targetUrl;
         });
 
-        // Event listener for cancel button in the modal
+        // Event listener untuk tombol batal di modal
         cancelBtn.addEventListener('click', () => {
             confirmationModal.style.display = 'none';
         });
 
-        // Event listener for close button in the susulan modal
+        // Event listener untuk tombol tutup di modal susulan
         closeSusulanModalBtn.addEventListener('click', () => {
             susulanModal.style.display = 'none';
         });
 
-        // Close confirmation modal when clicking outside of it
+        // Tutup modal konfirmasi saat mengklik di luar area modal
         confirmationModal.addEventListener('click', (event) => {
             if (event.target === confirmationModal) {
                 confirmationModal.style.display = 'none';
             }
         });
 
-        // Close susulan modal when clicking outside of it
+        // Tutup modal susulan saat mengklik di luar area modal
         susulanModal.addEventListener('click', (event) => {
             if (event.target === susulanModal) {
                 susulanModal.style.display = 'none';
             }
         });
 
-        // Fetch data from Firebase Realtime Database once when the page loads
+        // Ambil data dari Firebase Realtime Database satu kali saat halaman dimuat
         get(child(dbRef, 'publicSettings')).then((snapshot) => {
-            loadingOverlay.classList.remove('visible'); // Hide loading overlay after data is loaded
+            // Sembunyikan overlay loading segera setelah data diterima
+            loadingOverlay.classList.add('hidden');
+
             if (snapshot.exists()) {
                 firebaseSettings = snapshot.val();
                 applyButtonStates();
                 
                 currentSusulanExams = [];
                 if (firebaseSettings.susulan && firebaseSettings.susulan.list) {
-                    // Convert the object of susulan exams into an array
+                    // Konversi objek ujian susulan menjadi array
                     Object.values(firebaseSettings.susulan.list).forEach(exam => {
                         currentSusulanExams.push(exam);
                     });
                 }
 
-                // Check if all buttons are disabled, then redirect
+                // Periksa apakah semua tombol tidak aktif
                 const isKelas7Enabled = firebaseSettings?.kelas7?.enabled;
                 const isKelas8Enabled = firebaseSettings?.kelas8?.enabled;
                 const isKelas9Enabled = firebaseSettings?.kelas9?.enabled;
                 const isSusulanEnabled = firebaseSettings?.susulan?.enabled;
 
                 if (!isKelas7Enabled && !isKelas8Enabled && !isKelas9Enabled && !isSusulanEnabled) {
+                    // Jika semua tidak aktif, langsung redirect
                     window.location.href = "https://speropa.github.io/ujian";
+                } else {
+                    // Jika ada tombol yang aktif, tampilkan konten utama
+                    mainContainer.classList.remove('hidden');
                 }
 
             } else {
-                console.log("No data available in publicSettings.");
-                applyButtonStates({}); // Apply states even if no data (all hidden)
-                // If no publicSettings data is available, assume all are disabled and redirect
+                console.log("No data available in publicSettings. Redirecting...");
+                // Jika tidak ada data publicSettings, anggap semua tidak aktif dan redirect
                 window.location.href = "https://speropa.github.io/ujian";
             }
         }).catch((error) => {
             console.error("Error fetching data:", error);
-            loadingOverlay.classList.remove('visible'); // Hide loading even if there's an error
-            // If there's an error fetching data, assume all are disabled and redirect
+            // Sembunyikan overlay loading bahkan jika ada error
+            loadingOverlay.classList.add('hidden');
+            // Jika ada error saat mengambil data, anggap semua tidak aktif dan redirect
             window.location.href = "https://speropa.github.io/ujian";
         });
     </script>
